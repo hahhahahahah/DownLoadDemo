@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:background="@color/background"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <include layout="@layout/layout_title"/>
+    <View
+        android:layout_width="match_parent"
+        android:background="@color/colorWhite"
+        android:layout_height="1dp"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="35dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:layout_centerVertical="true"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/loading"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="下载中"
+                android:gravity="center"
+                android:textColor="@color/color_black"
+                android:layout_height="wrap_content"/>
+            <View
+                android:layout_width="1dp"
+                android:background="@color/colorWhite"
+                android:layout_height="match_parent"/>
+
+            <TextView
+                android:id="@+id/loaded"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="已下载"
+                android:gravity="center"
+                android:textColor="@color/color_black"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+    </RelativeLayout>
+    <View
+        android:layout_width="match_parent"
+        android:background="@color/colorWhite"
+        android:layout_height="1dp"/>
+    <android.support.v4.view.ViewPager
+        android:id="@+id/download_viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </android.support.v4.view.ViewPager>
+</LinearLayout>
