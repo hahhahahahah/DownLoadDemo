@@ -17,7 +17,6 @@ import com.org.zl.downloaddemo.utils.GetFileSharePreance;
 import com.org.zl.downloaddemo.utils.SPUtils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -36,8 +35,8 @@ public class DownloadService extends Service {
 	private MyBinder myBinder = new MyBinder();
 	private ArrayList<FileInfo> mCurretList;//当前服务中的正在下载列表
 	private ArrayList<FileInfo> mCurretListOut;//输出的下载列表
+	private DownloanThread[] threads;//下载线程数组
 	private GetFileSharePreance preance;
-	private HashMap<Integer,DownloanThread> map;//创建动态对象
 	@Override
 	public IBinder onBind(Intent intent) {
 		return myBinder;
@@ -47,7 +46,7 @@ public class DownloadService extends Service {
 	public void onCreate() {
 		mCurretList = new ArrayList<>();
 		mCurretListOut = new ArrayList<>();
-		map = new HashMap<Integer,DownloanThread>();
+		threads = new DownloanThread[1000];//创建巨大的对象数组，
 		preance = BaseApplication.getFileSharePreance();//获取缓存实例，这里的缓存主要用在APP关闭后，重新进入下载列表后显示使用
 		super.onCreate();
 	}
@@ -71,8 +70,8 @@ public class DownloadService extends Service {
 	private void startDownLoad(FileInfo fileInfo) {
 		if (fileInfo != null && !TextUtils.isEmpty(fileInfo.getUrl())) {
 			preance.setUrlList(mCurretList);//从缓存地址集合中移除这一条（保存最新的地址集合）
-			map.put(fileInfo.getId(),new DownloanThread());
-			map.get(fileInfo.getId()).Download(fileInfo);//开始下载
+			threads[fileInfo.getId()] = new DownloanThread();//新建下载对象
+			threads[fileInfo.getId()].Download(fileInfo);//开始下载
 			SPUtils.setLong(getApplicationContext(), SPKey.CURRENTLIST_SIZE, fileInfo.getId());//设置下载ID自增
 			sendHandler();
 		}
@@ -80,8 +79,8 @@ public class DownloadService extends Service {
 	//停止下载逻辑处理方法
 	private void stopDownLoad(FileInfo fileInfo) {
 		if (fileInfo != null && !TextUtils.isEmpty(fileInfo.getUrl())) {
-			if (map.get(fileInfo.getId()) != null) {
-				map.get(fileInfo.getId()).downLoadCancel();//下载线程停止
+			if (threads[fileInfo.getId()] != null) {
+				threads[fileInfo.getId()].downLoadCancel();//下载线程停止
 			}
 			sendHandler();
 		}
@@ -93,8 +92,8 @@ public class DownloadService extends Service {
 			for (int x = 0; x < mCurretList.size(); x++) {//如果是正在下载的列表，先暂停下载。
 				if (mCurretList.get(x).getUrl().equals(fileInfo.getUrl())) {//如果匹配到了
 					preance.delete(mCurretList.get(x).getUrl());//删除下载缓存
-					if(map.get(fileInfo.getId()) != null){
-						map.get(fileInfo.getId()).downLoadCancel();//从下载线程停止
+					if(threads[fileInfo.getId()] != null){
+						threads[fileInfo.getId()].downLoadCancel();//从下载线程停止
 					}
 					mCurretList.remove(mCurretList.get(x));//从下载列表移除这条
 					preance.setUrlList(mCurretList);//从缓存地址集合中移除这一条（保存最新的地址集合）
@@ -182,10 +181,10 @@ public class DownloadService extends Service {
 					for (int x = 0; x < loadBackListeners.size(); x++) {//有多少个界面在观察下载数据
 						mCurretListOut.clear();
 						for(int j = 0 ; j < mCurretList.size() ;j++){//正在下载列表中的数据
-							if(map.get(mCurretList.get(j).getId()) == null){//假如下载线程没有开启
+							if(threads[mCurretList.get(j).getId()] == null){//假如下载线程没有开启
 								mCurretListOut.add(mCurretList.get(j));
 							}else {//从下载线程中取数据
-								mCurretListOut.add(map.get(mCurretList.get(j).getId()).getFileInfo());
+								mCurretListOut.add(threads[mCurretList.get(j).getId()].getFileInfo());
 							}
 						}
 						loadBackListeners.get(x).onDownloadSize(mCurretListOut);//传递给不同的观察者
